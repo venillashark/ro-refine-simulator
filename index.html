@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RO 精煉戰情室 8.1.0 (失敗懲罰校正版)</title>
+    <title>RO 精煉戰情室 8.2.0 (手動/自動定價 & 期望耗材版)</title>
     <style>
         :root { 
             --primary: #2980b9; --bg: #ecf0f1; --success: #27ae60; --fail: #e74c3c; 
@@ -18,6 +18,7 @@
         
         .calc-box { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.8rem; }
         .calc-box input, .calc-box select { width: 100px !important; padding: 2px 5px !important; border: 1px solid #ccc; border-radius: 4px; }
+        .calc-box input.auto-calc { background: #e8f4f8; font-weight: bold; color: var(--primary); }
         
         .gauge-container { width: 200px; height: 100px; position: relative; margin: 15px auto 5px; overflow: hidden; }
         .gauge-bg { width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(#27ae60 0deg, #2ecc71 45deg, #f1c40f 90deg, #e67e22 135deg, #e74c3c 180deg); mask: radial-gradient(transparent 65%, black 66%); -webkit-mask: radial-gradient(transparent 65%, black 66%); transform: rotate(-90deg); }
@@ -47,7 +48,7 @@
         .p-bad { background: #f8d7da; color: #721c24; }
         .full-width { grid-column: 1 / -1; }
         
-        .mat-section-title { font-weight: bold; color: var(--primary); margin: 8px 0 4px; font-size: 0.75rem; display: flex; align-items: center; }
+        .mat-section-title { font-weight: bold; color: var(--primary); margin: 12px 0 6px; font-size: 0.8rem; display: flex; align-items: center; }
         .mat-section-title::after { content: ""; flex: 1; height: 1px; background: #ddd; margin-left: 8px; }
     </style>
 </head>
@@ -59,18 +60,18 @@
             <h2>⚙️ 核心系統設定</h2>
             <div class="calc-box">
                 <table width="100%">
-                    <tr><td>1T 換 R幣</td><td><input type="number" id="p_rate" value="200000" onchange="syncPrices()"></td></tr>
+                    <tr><td>1T 換 R幣</td><td><input type="number" id="p_rate" value="200000" onchange="updatePrices()"></td></tr>
                     <tr><td>鐵祝門檻</td><td><select id="b_start" onchange="save()"><option value="10">從 +10 開始</option><option value="7">從 +7 開始</option></select></td></tr>
-                    <tr><td>鐵匠的祝福</td><td><input type="number" id="p_bless" value="3600000" onchange="syncPrices()"></td></tr>
+                    <tr><td>鐵匠的祝福</td><td><input type="number" id="p_bless" value="3600000" onchange="updatePrices()"></td></tr>
                 </table>
             </div>
             <div id="dim_materials" class="calc-box" style="display:none; background:#fff3e0; border-color:#ffe0b2; margin-top:10px;">
                 <div style="font-weight:bold; color:#e67e22; margin-bottom:5px;">📦 次元強化裝置材料</div>
                 <table width="100%">
-                    <tr><td>深淵魔力(10)</td><td><input type="number" id="dm_1" value="100000" onchange="syncPrices()"></td></tr>
-                    <tr><td>時空魔力(10)</td><td><input type="number" id="dm_2" value="100000" onchange="syncPrices()"></td></tr>
-                    <tr><td>鍺金石(75)</td><td><input type="number" id="dm_3" value="10000" onchange="syncPrices()"></td></tr>
-                    <tr><td>影子金屬(75)</td><td><input type="number" id="dm_4" value="10000" onchange="syncPrices()"></td></tr>
+                    <tr><td>深淵魔力(10)</td><td><input type="number" id="dm_1" value="100000" onchange="updatePrices()"></td></tr>
+                    <tr><td>時空魔力(10)</td><td><input type="number" id="dm_2" value="100000" onchange="updatePrices()"></td></tr>
+                    <tr><td>鍺金石(75)</td><td><input type="number" id="dm_3" value="10000" onchange="updatePrices()"></td></tr>
+                    <tr><td>影子金屬(75)</td><td><input type="number" id="dm_4" value="10000" onchange="updatePrices()"></td></tr>
                     <tr style="border-top:1px solid #e67e22;"><td><b>裝置總價</b></td><td><input type="number" id="p_dim_box" value="0" readonly style="background:#fff; color:red; font-weight:bold;"></td></tr>
                 </table>
             </div>
@@ -79,31 +80,43 @@
         <div class="card">
             <h2>🛠️ 原料成本計算器</h2>
             <div class="calc-box">
+                <div style="font-size:0.7rem; color:#888; text-align:right; margin-bottom:5px;">(藍底框支援公式連動，亦可手動修改)</div>
                 <div class="mat-section-title">✨ 基礎共用</div>
                 <table width="100%">
-                    <tr><td>乙太星塵</td><td><input type="number" id="base_star" value="10000" onchange="syncPrices()"></td></tr>
+                    <tr><td>乙太星塵</td><td><input type="number" id="base_star" value="10000" onchange="calcDerived()"></td></tr>
                 </table>
 
-                <div class="mat-section-title" style="color:#c0392b;">⚔️ 神之金屬系列 (武器)</div>
+                <div class="mat-section-title" style="color:#c0392b;">⚔️ 神之金屬系列 (基礎)</div>
                 <table width="100%">
-                    <tr><td>神之金屬</td><td><input type="number" id="p_ori" value="10000" onchange="syncPrices()"></td></tr>
-                    <tr><td>濃縮神金</td><td><input type="number" id="p_cori" value="150000" onchange="syncPrices()"></td></tr>
-                    <tr><td>高濃縮神金</td><td><input type="number" id="p_hori" value="450000" onchange="syncPrices()"></td></tr>
+                    <tr><td>神之金屬</td><td><input type="number" id="p_ori" value="10000" onchange="calcDerived()"></td></tr>
+                    <tr><td>濃縮神金</td><td><input type="number" id="p_cori" value="150000" onchange="calcDerived()"></td></tr>
+                    <tr><td>高濃縮神金</td><td><input type="number" id="p_hori" value="450000" onchange="calcDerived()"></td></tr>
                 </table>
 
-                <div class="mat-section-title" style="color:#27ae60;">🛡️ 鋁系列 (防具)</div>
+                <div class="mat-section-title" style="color:#27ae60;">🛡️ 鋁系列 (基礎)</div>
                 <table width="100%">
-                    <tr><td>鋁</td><td><input type="number" id="p_alu" value="5000" onchange="syncPrices()"></td></tr>
-                    <tr><td>濃縮鋁</td><td><input type="number" id="p_calu" value="80000" onchange="syncPrices()"></td></tr>
-                    <tr><td>高濃縮鋁</td><td><input type="number" id="p_halu" value="300000" onchange="syncPrices()"></td></tr>
+                    <tr><td>鋁</td><td><input type="number" id="p_alu" value="5000" onchange="calcDerived()"></td></tr>
+                    <tr><td>濃縮鋁</td><td><input type="number" id="p_calu" value="80000" onchange="calcDerived()"></td></tr>
+                    <tr><td>高濃縮鋁</td><td><input type="number" id="p_halu" value="300000" onchange="calcDerived()"></td></tr>
                 </table>
 
-                <div class="mat-section-title" style="color:var(--upgrade-s);">💎 乙太寶石估算 (自動)</div>
-                <table width="100%" style="font-size:0.7rem; color:#666;">
-                    <tr><td>乙太天藍 (D)</td><td id="disp_blue">0</td></tr>
-                    <tr><td>乙太黃 (C)</td><td id="disp_yellow">0</td></tr>
-                    <tr><td>乙太紫 (B)</td><td id="disp_purple">0</td></tr>
-                    <tr><td>乙太琥珀 (A)</td><td id="disp_amber">0</td></tr>
+                <div class="mat-section-title" style="color:var(--primary);">🔮 乙太精煉材料 (自動算/可手動)</div>
+                <table width="100%">
+                    <tr><td>乙太神金</td><td><input type="number" class="auto-calc" id="p_eori" value="0" onchange="updatePrices()"></td></tr>
+                    <tr><td>濃縮乙太神金</td><td><input type="number" class="auto-calc" id="p_ceori" value="0" onchange="updatePrices()"></td></tr>
+                    <tr><td>高濃縮乙太神金</td><td><input type="number" class="auto-calc" id="p_heori" value="0" onchange="updatePrices()"></td></tr>
+                    <tr><td>乙太鋁</td><td><input type="number" class="auto-calc" id="p_ealu" value="0" onchange="updatePrices()"></td></tr>
+                    <tr><td>濃縮乙太鋁</td><td><input type="number" class="auto-calc" id="p_cealu" value="0" onchange="updatePrices()"></td></tr>
+                    <tr><td>高濃縮乙太鋁</td><td><input type="number" class="auto-calc" id="p_healu" value="0" onchange="updatePrices()"></td></tr>
+                </table>
+
+                <div class="mat-section-title" style="color:var(--upgrade-s);">💎 乙太寶石系列 (自動算/可手動)</div>
+                <table width="100%">
+                    <tr><td>乙太魔石</td><td><input type="number" class="auto-calc" id="p_emagic" value="0" onchange="calcDerivedGems()"></td></tr>
+                    <tr><td>乙太天藍 (D)</td><td><input type="number" class="auto-calc" id="p_eblue" value="0" onchange="updatePrices()"></td></tr>
+                    <tr><td>乙太黃 (C)</td><td><input type="number" class="auto-calc" id="p_eyellow" value="0" onchange="updatePrices()"></td></tr>
+                    <tr><td>乙太紫 (B)</td><td><input type="number" class="auto-calc" id="p_epurple" value="0" onchange="updatePrices()"></td></tr>
+                    <tr><td>乙太琥珀 (A)</td><td><input type="number" class="auto-calc" id="p_eamber" value="0" onchange="updatePrices()"></td></tr>
                 </table>
             </div>
         </div>
@@ -164,6 +177,22 @@
                             <div class="p-box p-bad"><b>💀 非酋 (後10%)</b><br><span id="sim_p90">0</span> T</div>
                         </div>
                     </div>
+
+                    <div style="background: white; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.8rem; border: 1px dashed #ccc;">
+                        <div style="font-weight:bold; color:var(--dark); margin-bottom: 8px;">📦 平均期望消耗材料數量</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px; color: #555;">
+                            <div>一般乙太：<span id="sim_m1" style="color:var(--primary); font-weight:bold;">0</span></div>
+                            <div>濃縮乙太：<span id="sim_m2" style="color:var(--primary); font-weight:bold;">0</span></div>
+                            <div>高濃縮乙太：<span id="sim_m3" style="color:var(--primary); font-weight:bold;">0</span></div>
+                            <div>鐵匠祝福：<span id="sim_bless" style="color:#e67e22; font-weight:bold;">0</span></div>
+                            <div style="grid-column: 1 / -1; border-top: 1px dotted #ccc; margin: 4px 0;"></div>
+                            <div>乙太天藍：<span id="sim_blue" style="font-weight:bold;">0</span></div>
+                            <div>乙太黃：<span id="sim_yellow" style="font-weight:bold;">0</span></div>
+                            <div>乙太紫：<span id="sim_purple" style="font-weight:bold;">0</span></div>
+                            <div>乙太琥珀：<span id="sim_amber" style="font-weight:bold;">0</span></div>
+                            <div id="sim_dim_box_row" style="grid-column: 1 / -1; display:none; color:#d35400; margin-top:4px;">次元強化裝置：<span id="sim_dim_box" style="font-weight:bold;">0</span> 次</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -214,29 +243,54 @@
     let stats = { m1:0, m2:0, m3:0, bless:0, blue:0, yellow:0, purple:0, amber:0, fail:0, fee:0, dim_box:0 };
     let prices = { m1:0, m2:0, m3:0, blue:0, yellow:0, purple:0, amber:0, dim_box:0 };
 
-    function syncPrices() {
+    // 公式連動：當修改基礎星塵、鋁、神金時，自動重算底下的藍底格子
+    function calcDerived() {
         const star = val('base_star');
+        // 神金系列
+        document.getElementById('p_eori').value = star + val('p_ori') + 10000;
+        document.getElementById('p_ceori').value = (star*2) + val('p_cori') + 20000;
+        document.getElementById('p_heori').value = (star*3) + val('p_hori') + 50000;
+        // 鋁系列
+        document.getElementById('p_ealu').value = star + val('p_alu') + 10000;
+        document.getElementById('p_cealu').value = (star*2) + val('p_calu') + 20000;
+        document.getElementById('p_healu').value = (star*3) + val('p_halu') + 50000;
+        
+        // 寶石基底
+        document.getElementById('p_emagic').value = (star*5) + 100000;
+        calcDerivedGems();
+    }
+
+    // 當修改乙太魔石時，重新推算四色寶石
+    function calcDerivedGems() {
+        const emagic = val('p_emagic');
+        document.getElementById('p_eblue').value = (emagic*3) + 4560 + 100000;
+        document.getElementById('p_eyellow').value = (emagic*6) + 4560 + 200000;
+        document.getElementById('p_epurple').value = (emagic*10) + 4560 + 300000;
+        document.getElementById('p_eamber').value = (emagic*15) + 3420 + 500000;
+        updatePrices();
+    }
+
+    // 將所有輸入框的最終數字（無論是自動算好還是手動改的）寫入系統價格變數
+    function updatePrices() {
         const t = EQUIP_TEMPLATES[currentTemplate];
         if (t.matType === 'alu') {
-            prices.m1 = star + val('p_alu') + 10000;
-            prices.m2 = (star*2) + val('p_calu') + 20000;
-            prices.m3 = (star*3) + val('p_halu') + 50000;
+            prices.m1 = val('p_ealu');
+            prices.m2 = val('p_cealu');
+            prices.m3 = val('p_healu');
         } else {
-            prices.m1 = star + val('p_ori') + 10000;
-            prices.m2 = (star*2) + val('p_cori') + 20000;
-            prices.m3 = (star*3) + val('p_hori') + 50000;
+            prices.m1 = val('p_eori');
+            prices.m2 = val('p_ceori');
+            prices.m3 = val('p_heori');
         }
-        const emagic = (star*5) + 100000;
-        prices.blue = (emagic*3) + 4560 + 100000;
-        prices.yellow = (emagic*6) + 4560 + 200000;
-        prices.purple = (emagic*10) + 4560 + 300000;
-        prices.amber = (emagic*15) + 3420 + 500000;
-        prices.dim_box = (val('dm_1')*10) + (val('dm_2')*10) + (val('dm_3')*75) + (val('dm_4')*75) + (emagic*15);
-        document.getElementById('disp_blue').innerText = prices.blue.toLocaleString();
-        document.getElementById('disp_yellow').innerText = prices.yellow.toLocaleString();
-        document.getElementById('disp_purple').innerText = prices.purple.toLocaleString();
-        document.getElementById('disp_amber').innerText = prices.amber.toLocaleString();
+        prices.blue = val('p_eblue');
+        prices.yellow = val('p_eyellow');
+        prices.purple = val('p_epurple');
+        prices.amber = val('p_eamber');
+        
+        // 次元裝置
+        prices.dim_box = (val('dm_1')*10) + (val('dm_2')*10) + (val('dm_3')*75) + (val('dm_4')*75) + (val('p_emagic')*15);
         document.getElementById('p_dim_box').value = prices.dim_box;
+        
         save(); updateUI();
     }
 
@@ -251,10 +305,10 @@
         let bc = 0;
         if (lv <= 9) {
             if (lv >= bl) bc = (lv === 9 && t.matType !== 'alu') ? 3 : (lv - 6);
-            return { id: 'm2', label: '濃縮材料', bless: bc, fee: fee };
+            return { id: 'm2', label: '濃縮乙太材料', bless: bc, fee: fee };
         }
         if (lv >= bl) { if(lv===10) bc=3; else if(lv===11) bc=4; else if(lv===12) bc=9; else bc=15; }
-        return { id: 'm3', label: '高濃材料', bless: bc, fee: fee };
+        return { id: 'm3', label: '高濃縮乙太材料', bless: bc, fee: fee };
     }
 
     // 核心修復：失敗時依據材料扣除不同等級
@@ -319,15 +373,16 @@
         document.getElementById('needle').style.transform = `translateX(-50%) rotate(${deg}deg)`;
 
         document.getElementById('stats_list').innerHTML = `
-            <div class="mat-item"><span>基礎材料</span><b>${stats.m1}</b></div>
-            <div class="mat-item"><span>濃縮材料</span><b>${stats.m2}</b></div>
-            <div class="mat-item"><span>高濃縮材料</span><b>${stats.m3}</b></div>
+            <div class="mat-item"><span>一般乙太材料</span><b>${stats.m1}</b></div>
+            <div class="mat-item"><span>濃縮乙太材料</span><b>${stats.m2}</b></div>
+            <div class="mat-item"><span>高濃縮乙太材料</span><b>${stats.m3}</b></div>
             <div class="mat-item"><span>鐵匠的祝福</span><b>${stats.bless}</b></div>
             <hr style="opacity:0.2;">
             <div class="mat-item"><span>乙太天藍 (D)</span><b>${stats.blue}</b></div>
             <div class="mat-item"><span>乙太黃 (C)</span><b>${stats.yellow}</b></div>
             <div class="mat-item"><span>乙太紫 (B)</span><b>${stats.purple}</b></div>
             <div class="mat-item"><span>乙太琥珀 (A)</span><b>${stats.amber}</b></div>
+            ${stats.dim_box > 0 ? `<div class="mat-item" style="color:#d35400;"><span>次元裝置</span><b>${stats.dim_box}</b></div>` : ''}
             <hr style="opacity:0.2;">
             <div class="mat-item"><span>失敗次數</span><b style="color:var(--fail)">${stats.fail}</b></div>`;
     }
@@ -340,6 +395,9 @@
             const tLv = parseInt(document.getElementById('sim_target_lv').value);
             const strat = document.getElementById('sim_strat').value;
             const templateObj = EQUIP_TEMPLATES[currentTemplate];
+
+            // 材料期望值累加器
+            let simTotals = { m1:0, m2:0, m3:0, bless:0, blue:0, yellow:0, purple:0, amber:0, dim_box:0 };
 
             for(let i=0; i<iterations; i++) {
                 let sL = curLv, sR = curRank, sS = {m1:0,m2:0,m3:0,bless:0,blue:0,yellow:0,purple:0,amber:0,fee:0,dim_box:0,fail:0};
@@ -363,10 +421,15 @@
                     if (Math.random() < (rule.forceSuccess ? 1 : (templateObj.probs[sL]||15)/100)) sL++; 
                     else { 
                         sS.fail++; 
-                        // 核心修復：使用校正後的失敗降階邏輯
                         if (rule.bless === 0) sL = simHandleRefineFail(sL, rule.id, templateObj.safe); 
                     }
                 }
+                
+                // 累加本次消耗材料
+                simTotals.m1 += sS.m1; simTotals.m2 += sS.m2; simTotals.m3 += sS.m3; simTotals.bless += sS.bless;
+                simTotals.blue += sS.blue; simTotals.yellow += sS.yellow; simTotals.purple += sS.purple; simTotals.amber += sS.amber;
+                simTotals.dim_box += sS.dim_box;
+
                 results.push((sS.m1*prices.m1)+(sS.m2*prices.m2)+(sS.m3*prices.m3)+(sS.bless*val('p_bless'))+(sS.blue*prices.blue)+(sS.yellow*prices.yellow)+(sS.purple*prices.purple)+(sS.amber*prices.amber)+(sS.dim_box*prices.dim_box)+sS.fee);
             }
             results.sort((a,b) => a-b);
@@ -376,6 +439,24 @@
             document.getElementById('sim_twd_val').innerText = Math.round(avg/val('p_rate')).toLocaleString();
             document.getElementById('sim_p10').innerText = Math.round(results[500]/val('p_rate')).toLocaleString();
             document.getElementById('sim_p90').innerText = Math.round(results[4500]/val('p_rate')).toLocaleString();
+
+            // 顯示期望消耗材料
+            document.getElementById('sim_m1').innerText = (simTotals.m1 / iterations).toFixed(1);
+            document.getElementById('sim_m2').innerText = (simTotals.m2 / iterations).toFixed(1);
+            document.getElementById('sim_m3').innerText = (simTotals.m3 / iterations).toFixed(1);
+            document.getElementById('sim_bless').innerText = (simTotals.bless / iterations).toFixed(1);
+            document.getElementById('sim_blue').innerText = (simTotals.blue / iterations).toFixed(1);
+            document.getElementById('sim_yellow').innerText = (simTotals.yellow / iterations).toFixed(1);
+            document.getElementById('sim_purple').innerText = (simTotals.purple / iterations).toFixed(1);
+            document.getElementById('sim_amber').innerText = (simTotals.amber / iterations).toFixed(1);
+            
+            if (currentTemplate === 'dimension_weapon') {
+                document.getElementById('sim_dim_box_row').style.display = 'block';
+                document.getElementById('sim_dim_box').innerText = (simTotals.dim_box / iterations).toFixed(1);
+            } else {
+                document.getElementById('sim_dim_box_row').style.display = 'none';
+            }
+
             btn.innerText = "✅ 模擬完畢"; btn.disabled = false;
         }, 50);
     }
@@ -383,27 +464,37 @@
     function archive() {
         const cz = parseInt(document.getElementById('s_zeny').innerText.replace(/,/g, ''));
         const data = { time: new Date().toLocaleTimeString(), name: document.getElementById('itemName').value || '未命名', status: `+${curLv} ${curRank}階`, twd: Math.round(cz/val('p_rate')).toLocaleString(), zeny: cz.toLocaleString() };
-        let archs = JSON.parse(localStorage.getItem('ro_v81_archs') || '[]');
-        archs.unshift(data); localStorage.setItem('ro_v81_archs', JSON.stringify(archs)); renderArchives();
+        let archs = JSON.parse(localStorage.getItem('ro_v82_archs') || '[]');
+        archs.unshift(data); localStorage.setItem('ro_v82_archs', JSON.stringify(archs)); renderArchives();
         reset();
     }
 
     function renderArchives() {
         const body = document.getElementById('archBody');
-        const archs = JSON.parse(localStorage.getItem('ro_v81_archs') || '[]');
+        const archs = JSON.parse(localStorage.getItem('ro_v82_archs') || '[]');
         body.innerHTML = archs.map((a, i) => `<tr><td>${a.time}</td><td>${a.name}</td><td>${a.status}</td><td style="color:red; font-weight:bold;">${a.twd}</td><td>${a.zeny}</td><td><button onclick="delArch(${i})">刪除</button></td></tr>`).join('');
     }
 
-    function delArch(i) { let archs = JSON.parse(localStorage.getItem('ro_v81_archs') || '[]'); archs.splice(i, 1); localStorage.setItem('ro_v81_archs', JSON.stringify(archs)); renderArchives(); }
-    function clearArchives() { if(confirm("清空？")) { localStorage.removeItem('ro_v81_archs'); renderArchives(); } }
+    function delArch(i) { let archs = JSON.parse(localStorage.getItem('ro_v82_archs') || '[]'); archs.splice(i, 1); localStorage.setItem('ro_v82_archs', JSON.stringify(archs)); renderArchives(); }
+    function clearArchives() { if(confirm("清空？")) { localStorage.removeItem('ro_v82_archs'); renderArchives(); } }
     function val(id) { return parseInt(document.getElementById(id).value) || 0; }
     function reset() { curLv=0; curRank='無'; stats={m1:0,m2:0,m3:0,bless:0,blue:0,yellow:0,purple:0,amber:0,fail:0,fee:0,dim_box:0}; updateUI(); }
-    function save() { const cfg = {}; document.querySelectorAll('input, select').forEach(el => { if(el.id) cfg[el.id] = el.value; }); localStorage.setItem('ro_v81_cfg', JSON.stringify(cfg)); }
-    function switchTemplate(v) { currentTemplate = v; document.getElementById('dim_materials').style.display = (v === 'dimension_weapon') ? 'block' : 'none'; syncPrices(); }
+    function save() { const cfg = {}; document.querySelectorAll('input, select').forEach(el => { if(el.id) cfg[el.id] = el.value; }); localStorage.setItem('ro_v82_cfg', JSON.stringify(cfg)); }
+    
+    function switchTemplate(v) { 
+        currentTemplate = v; 
+        document.getElementById('dim_materials').style.display = (v === 'dimension_weapon') ? 'block' : 'none'; 
+        updatePrices(); // 切換時不要自動刷掉使用者手動輸入的值，只更新系統參數
+    }
 
     window.onload = () => {
-        const s = JSON.parse(localStorage.getItem('ro_v81_cfg'));
-        if(s) Object.keys(s).forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = s[id]; });
+        const s = JSON.parse(localStorage.getItem('ro_v82_cfg'));
+        if(s) {
+            Object.keys(s).forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = s[id]; });
+            updatePrices(); // 如果有存檔，直接載入存檔數值，不覆寫
+        } else {
+            calcDerived(); // 第一次開啟，使用公式算出預設值
+        }
         switchTemplate(document.getElementById('equip_template').value);
         renderArchives();
     };
