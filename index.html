@@ -3,22 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RO 精煉戰情室 6.5.1</title>
+    <title>RO 精煉戰情室 8.1.0 (失敗懲罰校正版)</title>
     <style>
         :root { 
             --primary: #2980b9; --bg: #ecf0f1; --success: #27ae60; --fail: #e74c3c; 
             --upgrade-s: #8e44ad; --upgrade-f: #576574; --dark: #2c3e50; --text: #34495e; --border: #dcdde1;
         }
         body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); }
-        .grid-main { display: grid; grid-template-columns: 350px 1fr 350px; gap: 15px; max-width: 1700px; margin: 0 auto; }
+        .grid-main { display: grid; grid-template-columns: 380px 1fr 350px; gap: 15px; max-width: 1800px; margin: 0 auto; }
         @media (max-width: 1200px) { .grid-main { grid-template-columns: 1fr; } }
         
         .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 18px; margin-bottom: 15px; border: 1px solid var(--border); }
         h2 { font-size: 1rem; color: var(--primary); margin: 0 0 12px 0; border-left: 4px solid var(--primary); padding-left: 8px; }
         
         .calc-box { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.8rem; }
-        .calc-box input { width: 90px !important; padding: 2px 5px !important; border: 1px solid #ccc; border-radius: 4px; }
-        .sync-btn { background: var(--success); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
+        .calc-box input, .calc-box select { width: 100px !important; padding: 2px 5px !important; border: 1px solid #ccc; border-radius: 4px; }
+        
+        .gauge-container { width: 200px; height: 100px; position: relative; margin: 15px auto 5px; overflow: hidden; }
+        .gauge-bg { width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(#27ae60 0deg, #2ecc71 45deg, #f1c40f 90deg, #e67e22 135deg, #e74c3c 180deg); mask: radial-gradient(transparent 65%, black 66%); -webkit-mask: radial-gradient(transparent 65%, black 66%); transform: rotate(-90deg); }
+        .gauge-needle { width: 4px; height: 70px; background: #2c3e50; position: absolute; bottom: 0; left: 50%; transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg); transition: transform 0.8s; border-radius: 4px; }
 
         .status-hero { background: var(--dark); color: white; border-radius: 15px; padding: 20px; text-align: center; border-bottom: 8px solid var(--primary); position: relative; }
         .lv-text { font-size: 4rem; font-weight: 900; color: #f1c40f; line-height: 1; margin: 10px 0; }
@@ -28,21 +31,24 @@
         .btn { border: none; padding: 12px; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
         .btn-fail { background: var(--fail); } .btn-succ { background: var(--success); }
         .btn-up-fail { background: var(--upgrade-f); } .btn-up-succ { background: var(--upgrade-s); }
-        .btn:disabled { background: #bdc3c7 !important; cursor: not-allowed; opacity: 0.5; }
+        .btn:disabled { background: #bdc3c7 !important; cursor: not-allowed; opacity: 0.5; filter: grayscale(1); }
 
         .mat-item { display: flex; justify-content: space-between; background: #f8f9fa; padding: 6px 12px; border-radius: 6px; border: 1px solid #eee; font-size: 0.85rem; margin-bottom: 4px; }
         .twd-hero { background: #e3f2fd; padding: 10px; text-align: center; border-radius: 10px; border: 1px solid #bbdefb; margin-bottom: 10px; }
         
-        .luck-tag { display: inline-block; padding: 4px 12px; border-radius: 5px; font-weight: bold; margin-top: 8px; font-size: 0.9rem; }
-        .luck-god { background: #ffd700; color: #b8860b; }
-        .luck-hell { background: #2c3e50; color: #fff; }
-
-        .archive-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: white; border-radius: 12px; overflow: hidden; margin-top: 10px; }
-        .archive-table th { background: var(--dark); color: white; padding: 10px; }
+        .archive-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+        .archive-table th { background: var(--dark); color: white; padding: 10px; text-align: center; }
         .archive-table td { border-bottom: 1px solid #eee; padding: 12px; text-align: center; }
         
         .sim-box { background: #fff3e0; border: 1px solid #ffe0b2; padding: 15px; border-radius: 10px; margin-top: 15px; }
+        .sim-percentile { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 0.75rem; }
+        .p-box { padding: 8px; border-radius: 6px; text-align: center; }
+        .p-good { background: #d4edda; color: #155724; }
+        .p-bad { background: #f8d7da; color: #721c24; }
         .full-width { grid-column: 1 / -1; }
+        
+        .mat-section-title { font-weight: bold; color: var(--primary); margin: 8px 0 4px; font-size: 0.75rem; display: flex; align-items: center; }
+        .mat-section-title::after { content: ""; flex: 1; height: 1px; background: #ddd; margin-left: 8px; }
     </style>
 </head>
 <body>
@@ -50,32 +56,54 @@
 <div class="grid-main">
     <div class="side-config">
         <div class="card">
-            <h2>💎 原料成本計算器</h2>
+            <h2>⚙️ 核心系統設定</h2>
             <div class="calc-box">
                 <table width="100%">
-                    <tr><td>乙太星塵</td><td><input type="number" id="base_dust" value="50000"></td></tr>
-                    <tr style="background:#e3f2fd;"><td>乙太魔石</td><td><input type="number" id="base_magic" value="350000"></td></tr>
-                    <tr><td>一般鋁</td><td><input type="number" id="base_alu" value="10000"></td></tr>
-                    <tr><td>濃縮鋁</td><td><input type="number" id="base_calu" value="200000"></td></tr>
-                    <tr><td>高濃鋁</td><td><input type="number" id="base_halu" value="500000"></td></tr>
+                    <tr><td>1T 換 R幣</td><td><input type="number" id="p_rate" value="200000" onchange="syncPrices()"></td></tr>
+                    <tr><td>鐵祝門檻</td><td><select id="b_start" onchange="save()"><option value="10">從 +10 開始</option><option value="7">從 +7 開始</option></select></td></tr>
+                    <tr><td>鐵匠的祝福</td><td><input type="number" id="p_bless" value="3600000" onchange="syncPrices()"></td></tr>
                 </table>
-                <button class="sync-btn" onclick="syncPrices()">⚡ 同步價格至設定</button>
+            </div>
+            <div id="dim_materials" class="calc-box" style="display:none; background:#fff3e0; border-color:#ffe0b2; margin-top:10px;">
+                <div style="font-weight:bold; color:#e67e22; margin-bottom:5px;">📦 次元強化裝置材料</div>
+                <table width="100%">
+                    <tr><td>深淵魔力(10)</td><td><input type="number" id="dm_1" value="100000" onchange="syncPrices()"></td></tr>
+                    <tr><td>時空魔力(10)</td><td><input type="number" id="dm_2" value="100000" onchange="syncPrices()"></td></tr>
+                    <tr><td>鍺金石(75)</td><td><input type="number" id="dm_3" value="10000" onchange="syncPrices()"></td></tr>
+                    <tr><td>影子金屬(75)</td><td><input type="number" id="dm_4" value="10000" onchange="syncPrices()"></td></tr>
+                    <tr style="border-top:1px solid #e67e22;"><td><b>裝置總價</b></td><td><input type="number" id="p_dim_box" value="0" readonly style="background:#fff; color:red; font-weight:bold;"></td></tr>
+                </table>
             </div>
         </div>
+
         <div class="card">
-            <h2>⚙️ 價格與策略</h2>
-            <div class="calc-box" style="background:none; border:none;">
+            <h2>🛠️ 原料成本計算器</h2>
+            <div class="calc-box">
+                <div class="mat-section-title">✨ 基礎共用</div>
                 <table width="100%">
-                    <tr><td>1T 換 R幣</td><td><input type="number" id="p_rate" value="200000" onchange="save()"></td></tr>
-                    <tr><td>鐵祝門檻</td><td><select id="b_start" onchange="save()"><option value="10">從 +10 開始</option><option value="7">從 +7 開始</option></select></td></tr>
-                    <tr><td>乙太鋁</td><td><input type="number" id="p_alu" value="145000" onchange="save()"></td></tr>
-                    <tr><td>濃縮乙太鋁</td><td><input type="number" id="p_calu" value="974999" onchange="save()"></td></tr>
-                    <tr><td>高濃乙太鋁</td><td><input type="number" id="p_halu" value="1199999" onchange="save()"></td></tr>
-                    <tr><td>鐵匠祝福</td><td><input type="number" id="p_bless" value="3624978" onchange="save()"></td></tr>
-                    <tr><td>乙太天藍</td><td><input type="number" id="p_blue" value="2000000" onchange="save()"></td></tr>
-                    <tr><td>乙太黃</td><td><input type="number" id="p_yellow" value="2000000" onchange="save()"></td></tr>
-                    <tr><td>乙太紫</td><td><input type="number" id="p_purple" value="2000000" onchange="save()"></td></tr>
-                    <tr><td>乙太琥珀</td><td><input type="number" id="p_amber" value="2000000" onchange="save()"></td></tr>
+                    <tr><td>乙太星塵</td><td><input type="number" id="base_star" value="10000" onchange="syncPrices()"></td></tr>
+                </table>
+
+                <div class="mat-section-title" style="color:#c0392b;">⚔️ 神之金屬系列 (武器)</div>
+                <table width="100%">
+                    <tr><td>神之金屬</td><td><input type="number" id="p_ori" value="10000" onchange="syncPrices()"></td></tr>
+                    <tr><td>濃縮神金</td><td><input type="number" id="p_cori" value="150000" onchange="syncPrices()"></td></tr>
+                    <tr><td>高濃縮神金</td><td><input type="number" id="p_hori" value="450000" onchange="syncPrices()"></td></tr>
+                </table>
+
+                <div class="mat-section-title" style="color:#27ae60;">🛡️ 鋁系列 (防具)</div>
+                <table width="100%">
+                    <tr><td>鋁</td><td><input type="number" id="p_alu" value="5000" onchange="syncPrices()"></td></tr>
+                    <tr><td>濃縮鋁</td><td><input type="number" id="p_calu" value="80000" onchange="syncPrices()"></td></tr>
+                    <tr><td>高濃縮鋁</td><td><input type="number" id="p_halu" value="300000" onchange="syncPrices()"></td></tr>
+                </table>
+
+                <div class="mat-section-title" style="color:var(--upgrade-s);">💎 乙太寶石估算 (自動)</div>
+                <table width="100%" style="font-size:0.7rem; color:#666;">
+                    <tr><td>乙太天藍 (D)</td><td id="disp_blue">0</td></tr>
+                    <tr><td>乙太黃 (C)</td><td id="disp_yellow">0</td></tr>
+                    <tr><td>乙太紫 (B)</td><td id="disp_purple">0</td></tr>
+                    <tr><td>乙太琥珀 (A)</td><td id="disp_amber">0</td></tr>
                 </table>
             </div>
         </div>
@@ -83,15 +111,20 @@
 
     <div class="main-refine">
         <div class="card">
-            <input id="itemName" type="text" placeholder="裝備名稱..." style="width:100%; font-size:1.5rem; font-weight:bold; border:none; border-bottom:3px solid var(--primary); margin-bottom:15px; outline:none; text-align:center;" oninput="save()">
-            
+            <input id="itemName" type="text" placeholder="輸入裝備名稱..." style="width:100%; font-size:1.5rem; font-weight:bold; border:none; border-bottom:3px solid var(--primary); margin-bottom:10px; outline:none; text-align:center;" oninput="save()">
+            <select id="equip_template" onchange="switchTemplate(this.value)" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--primary); font-weight:bold; background:#f0f7ff; margin-bottom:10px;">
+                <option value="grade2_armor">二級防具 (使用鋁系列)</option>
+                <option value="grade5_weapon">五級武器 (使用神金系列)</option>
+                <option value="dimension_weapon">次元維度武器 (使用神金系列)</option>
+            </select>
+
             <div class="status-hero">
-                <div id="hintText" class="refine-hint">使用：一般乙太鋁</div>
+                <div id="hintText" class="refine-hint">準備就緒</div>
                 <div id="dispRank" style="font-size:1.1rem; opacity:0.8;">無階級</div>
                 <div class="lv-text" id="dispLv">+0</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; font-size:0.9rem;">
-                    <div>精煉率 <span id="prob_r" style="color:#f1c40f;">100%</span></div>
-                    <div>升階率 <span id="prob_u" style="color:#f1c40f;">--</span></div>
+                    <div>精煉機率 <span id="prob_r" style="color:#f1c40f;">100%</span></div>
+                    <div>升階機率 <span id="prob_u" style="color:#f1c40f;">--</span></div>
                 </div>
             </div>
 
@@ -103,30 +136,34 @@
             </div>
             
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
-                <button onclick="reset()" style="padding:10px; border:1px solid #ccc; background:white; cursor:pointer; border-radius:6px;">♻️ 重置</button>
+                <button onclick="reset()" style="padding:10px; border:1px solid #ccc; background:white; cursor:pointer; border-radius:6px;">♻️ 重置消耗</button>
                 <button onclick="archive()" style="padding:10px; background:var(--primary); color:white; border:none; cursor:pointer; border-radius:6px;">💾 結案存檔</button>
             </div>
 
             <div class="sim-box">
-                <h2 style="color:#e67e22; border-left-color:#e67e22; margin-top:0;">🧪 模擬基準 (歐非判定)</h2>
+                <h2 style="color:#e67e22; border-left-color:#e67e22; margin-top:0;">🧪 期望成本模擬分析 (5000次)</h2>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                    <select id="sim_target_rank" style="padding:6px; border-radius:4px; border:1px solid #ccc;">
-                        <option value="current">目標：維持當前階級</option>
-                        <option value="D">目標：D 階</option>
-                        <option value="C">目標：C 階</option>
-                        <option value="B">目標：B 階</option>
-                        <option value="A">目標：A 階</option>
-                    </select>
-                    <select id="sim_target_lv" style="padding:6px; border-radius:4px; border:1px solid #ccc;">
-                        <option value="10">目標：+10</option><option value="11">目標：+11</option>
-                        <option value="12">目標：+12</option><option value="13">目標：+13</option><option value="14">目標：+14</option>
+                    <select id="sim_target_rank"><option value="current">維持當前階級</option><option value="D">目標：D 階</option><option value="C">目標：C 階</option><option value="B">目標：B 階</option><option value="A">目標：A 階</option></select>
+                    <select id="sim_target_lv"><option value="10">目標：+10</option><option value="11">目標：+11</option><option value="12">目標：+12</option><option value="13" selected>目標：+13</option><option value="14">目標：+14</option></select>
+                    
+                    <select id="sim_strat" style="grid-column: 1 / -1; padding:8px; border-radius:4px; border:1px solid #ccc; font-weight:bold; color:var(--primary); background: #f0f7ff;">
+                        <option value="11">🤖 最佳策略：精煉至 +11 再升階 (省寶石，推薦)</option>
+                        <option value="min">🎲 激進策略：達最低門檻 (+9/+10) 立即升階 (燒錢拚運氣)</option>
                     </select>
                 </div>
-                <button onclick="runSimulation()" style="width:100%; padding:10px; background:#e67e22; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">先按此執行 100 次模擬基準</button>
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; font-size:0.75rem; margin-top:12px; text-align:center;">
-                    <div>模擬平均 R: <b id="sim_zeny_val">0</b></div>
-                    <div>平均 TWD: <b id="sim_twd_val">0</b></div>
-                    <div>期望失敗: <b id="sim_fail_val">0</b></div>
+                <button id="btn_sim" onclick="runSimulation()" style="width:100%; padding:10px; background:#e67e22; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">執行大數據模擬</button>
+                
+                <div id="sim_result_area" style="display:none; margin-top:12px;">
+                    <div style="text-align:center; background:white; padding:10px; border-radius:8px;">
+                        <div style="font-size:0.8rem;">平均期望成本</div>
+                        <div style="color:var(--primary); font-size:1.4rem; font-weight:bold;"><span id="sim_twd_val">0</span> TWD</div>
+                        <div style="font-size:0.7rem; color:#666;">(約 <span id="sim_zeny_val">0</span> Zeny)</div>
+                        
+                        <div class="sim-percentile">
+                            <div class="p-box p-good"><b>🍀 歐皇 (前10%)</b><br><span id="sim_p10">0</span> T</div>
+                            <div class="p-box p-bad"><b>💀 非酋 (後10%)</b><br><span id="sim_p90">0</span> T</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -135,68 +172,117 @@
     <div class="side-stats">
         <div class="card">
             <div class="twd-hero">
-                <div id="s_zeny" style="font-size:1.1rem; font-weight:bold; color:var(--primary);">0</div>
-                <div style="font-size:0.7rem; color:#666;">Total Zeny</div>
-                <hr style="margin:5px 0; opacity:0.1;">
+                <div id="s_zeny" style="font-size:0.9rem; color:var(--primary);">0 Zeny</div>
+                <div class="gauge-container"><div class="gauge-bg"></div><div id="needle" class="gauge-needle"></div></div>
                 <div id="s_twd" style="font-size:2.4rem; font-weight:900;">0</div>
-                <div>TWD</div>
-                <div id="luck_status" class="luck-tag luck-norm">需模擬基準</div>
+                <div>TWD (目前消耗)</div>
             </div>
-            <h2>📈 即時消耗統計</h2>
-            <div class="material-list">
-                <div class="mat-item"><span>一般乙太鋁</span><b id="s_alu">0</b></div>
-                <div class="mat-item"><span>濃縮乙太鋁</span><b id="s_calu">0</b></div>
-                <div class="mat-item"><span>高濃乙太鋁</span><b id="s_halu">0</b></div>
-                <div class="mat-item"><span>鐵匠祝福</span><b id="s_bless">0</b></div>
-                <hr style="opacity:0.2;">
-                <div class="mat-item"><span>乙太天藍(D)</span><b id="s_blue">0</b></div>
-                <div class="mat-item"><span>乙太黃(C)</span><b id="s_yellow">0</b></div>
-                <div class="mat-item"><span>乙太紫(B)</span><b id="s_purple">0</b></div>
-                <div class="mat-item"><span>乙太琥珀(A)</span><b id="s_amber">0</b></div>
-                <div class="mat-item"><span>累計失敗</span><b id="s_fail" style="color:var(--fail)">0</b></div>
-            </div>
+            <h2>📈 實算消耗統計</h2>
+            <div id="stats_list" class="material-list"></div>
         </div>
     </div>
 
     <div class="card full-width">
-        <h2>📁 結案檔案庫</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0;">📁 結案存檔庫</h2>
+            <button onclick="clearArchives()" style="font-size:0.7rem; background:#eee; border:1px solid #ccc; cursor:pointer; padding:2px 8px;">清空紀錄</button>
+        </div>
         <table class="archive-table">
-            <thead><tr><th>時間</th><th>裝備</th><th>結果</th><th>消耗 TWD</th><th>管理</th></tr></thead>
+            <thead>
+                <tr><th>時間</th><th>裝備</th><th>最終狀態</th><th>TWD</th><th>Zeny</th><th>操作</th></tr>
+            </thead>
             <tbody id="archBody"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const PROB_R_MAP = { 0:100, 1:100, 2:100, 3:60, 4:60, 5:40, 6:40, 7:40, 8:40, 9:20, 10:15, 11:15, 12:15, 13:15, 14:15 };
-    const RANK_DEF = { 
-        '無': { n:'D', minLv:9, g:'blue', qty:5, f:500000 }, 
-        'D': { n:'C', minLv:10, g:'yellow', qty:5, f:625000 }, 
-        'C': { n:'B', minLv:11, g:'purple', qty:5, f:1000000 }, 
-        'B': { n:'A', minLv:11, g:'amber', qty:10, f:2500000 } 
+    const EQUIP_TEMPLATES = {
+        'grade2_armor': { name: '二級防具', matType: 'alu', safe: 3, probs: { 0:100, 1:100, 2:100, 3:60, 4:60, 5:60, 6:40, 7:40, 8:40, 9:20, 10:15, 11:15, 12:15, 13:15, 14:15 } },
+        'grade5_weapon': { name: '五級武器', matType: 'ori', safe: 3, probs: { 0:100, 1:100, 2:100, 3:60, 4:60, 5:60, 6:40, 7:40, 8:40, 9:20, 10:20, 11:15, 12:15, 13:15, 14:15 } },
+        'dimension_weapon': { name: '次元武器', matType: 'ori', safe: 2, boxLevels: [9, 10, 11], probs: { 0:100, 1:100, 2:60, 3:60, 4:60, 5:40, 6:40, 7:40, 8:40, 9:20, 10:20, 11:15, 12:15, 13:15, 14:15 } }
     };
 
-    let curLv = 0, curRank = '無';
-    let stats = { alu:0, calu:0, halu:0, bless:0, blue:0, yellow:0, purple:0, amber:0, fail:0, fee:0 };
-    let simBenchmark = 0;
+    const RANK_DEF = { 
+        '無': { n:'D', g:'blue', qty:5, f:500000, probs: { 9:10, 10:20, 11:70, 12:70, 13:70, 14:70 } }, 
+        'D': { n:'C', g:'yellow', qty:5, f:625000, probs: { 10:20, 11:60, 12:60, 13:60, 14:60 } }, 
+        'C': { n:'B', g:'purple', qty:5, f:1000000, probs: { 11:50, 12:50, 13:50, 14:50 } }, 
+        'B': { n:'A', g:'amber', qty:10, f:2500000, probs: { 11:40, 12:40, 13:40, 14:40 } } 
+    };
+
+    let curLv = 0, curRank = '無', currentTemplate = 'grade2_armor';
+    let stats = { m1:0, m2:0, m3:0, bless:0, blue:0, yellow:0, purple:0, amber:0, fail:0, fee:0, dim_box:0 };
+    let prices = { m1:0, m2:0, m3:0, blue:0, yellow:0, purple:0, amber:0, dim_box:0 };
 
     function syncPrices() {
-        const magic = val('base_magic'), dust = val('base_dust');
-        document.getElementById('p_alu').value = dust * 1 + val('base_alu') + 10000;
-        document.getElementById('p_calu').value = dust * 2 + val('base_calu') + 20000;
-        document.getElementById('p_halu').value = dust * 3 + val('base_halu') + 50000;
-        document.getElementById('p_blue').value = magic * 3 + 4560 + 100000;
-        document.getElementById('p_yellow').value = magic * 6 + 4560 + 200000;
-        document.getElementById('p_purple').value = magic * 10 + 4560 + 300000;
-        document.getElementById('p_amber').value = magic * 15 + 3420 + 500000;
+        const star = val('base_star');
+        const t = EQUIP_TEMPLATES[currentTemplate];
+        if (t.matType === 'alu') {
+            prices.m1 = star + val('p_alu') + 10000;
+            prices.m2 = (star*2) + val('p_calu') + 20000;
+            prices.m3 = (star*3) + val('p_halu') + 50000;
+        } else {
+            prices.m1 = star + val('p_ori') + 10000;
+            prices.m2 = (star*2) + val('p_cori') + 20000;
+            prices.m3 = (star*3) + val('p_hori') + 50000;
+        }
+        const emagic = (star*5) + 100000;
+        prices.blue = (emagic*3) + 4560 + 100000;
+        prices.yellow = (emagic*6) + 4560 + 200000;
+        prices.purple = (emagic*10) + 4560 + 300000;
+        prices.amber = (emagic*15) + 3420 + 500000;
+        prices.dim_box = (val('dm_1')*10) + (val('dm_2')*10) + (val('dm_3')*75) + (val('dm_4')*75) + (emagic*15);
+        document.getElementById('disp_blue').innerText = prices.blue.toLocaleString();
+        document.getElementById('disp_yellow').innerText = prices.yellow.toLocaleString();
+        document.getElementById('disp_purple').innerText = prices.purple.toLocaleString();
+        document.getElementById('disp_amber').innerText = prices.amber.toLocaleString();
+        document.getElementById('p_dim_box').value = prices.dim_box;
         save(); updateUI();
+    }
+
+    function getRefineRule(lv) {
+        const bl = parseInt(document.getElementById('b_start').value);
+        const t = EQUIP_TEMPLATES[currentTemplate];
+        const fee = (t.matType === 'alu') ? (lv >= 10 ? 75000 : 30000) : (lv >= 10 ? 100000 : 50000);
+        
+        if (currentTemplate === 'dimension_weapon' && [9,10,11].includes(lv)) return { id: 'dim_box', label: '次元裝置', bless: 0, fee: fee, forceSuccess: true };
+        if (lv <= 5) return { id: 'm1', label: (t.matType==='alu'?'乙太鋁':'乙太神金'), bless: 0, fee: fee };
+        
+        let bc = 0;
+        if (lv <= 9) {
+            if (lv >= bl) bc = (lv === 9 && t.matType !== 'alu') ? 3 : (lv - 6);
+            return { id: 'm2', label: '濃縮材料', bless: bc, fee: fee };
+        }
+        if (lv >= bl) { if(lv===10) bc=3; else if(lv===11) bc=4; else if(lv===12) bc=9; else bc=15; }
+        return { id: 'm3', label: '高濃材料', bless: bc, fee: fee };
+    }
+
+    // 核心修復：失敗時依據材料扣除不同等級
+    function handleRefineFail(ruleId) {
+        if (ruleId === 'm1') {
+            curLv = Math.max(0, curLv - 3); // 一般材料扣3階
+        } else if (ruleId === 'm2' || ruleId === 'm3') {
+            if (curLv > EQUIP_TEMPLATES[currentTemplate].safe) curLv--; // 濃縮/高濃縮材料只扣1階
+        }
+    }
+    
+    function simHandleRefineFail(sL, ruleId, safeLv) {
+        if (ruleId === 'm1') {
+            return Math.max(0, sL - 3);
+        } else if (ruleId === 'm2' || ruleId === 'm3') {
+            return (sL > safeLv) ? (sL - 1) : sL;
+        }
+        return sL;
     }
 
     function act(isSucc, type) {
         if (type === 'r') {
-            const r = getRefineRule(curLv); stats[r.id]++; stats.bless += r.bless; stats.fee += r.fee;
-            if (isSucc) curLv++;
-            else { stats.fail++; if(r.bless===0){ if(r.id==='alu') curLv=Math.max(0,curLv-3); else if(curLv===6) curLv=5; else if(curLv>3) curLv--; }}
+            const rule = getRefineRule(curLv); stats[rule.id]++; stats.bless += rule.bless; stats.fee += rule.fee;
+            if (isSucc) curLv++; 
+            else { 
+                stats.fail++; 
+                if (rule.bless === 0) handleRefineFail(rule.id);
+            }
         } else {
             const r = RANK_DEF[curRank]; stats[r.g] += r.qty; stats.fee += r.f;
             if (isSucc) { curRank = r.n; curLv = 0; } else stats.fail++;
@@ -204,103 +290,122 @@
         updateUI();
     }
 
-    function getRefineRule(lv) {
-        const bl = parseInt(document.getElementById('b_start').value);
-        if (lv < 6) return { id: 'alu', label: '一般乙太鋁', bless: 0, fee: 30000 };
-        if (lv === 6) return { id: 'calu', label: '濃縮乙太鋁', bless: 0, fee: 30000 };
-        if (lv <= 9) return { id: 'calu', label: '濃縮乙太鋁', bless: (lv >= bl ? (lv-6) : 0), fee: 30000 };
-        if (lv <= 12) return { id: 'halu', label: '高濃縮乙太鋁', bless: 4, fee: 75000 };
-        return { id: 'halu', label: '高濃縮乙太鋁', bless: (lv === 13 ? 15 : 0), fee: 75000 };
-    }
-
     function updateUI() {
+        const t = EQUIP_TEMPLATES[currentTemplate];
         document.getElementById('dispLv').innerText = `+${curLv}`;
         document.getElementById('dispRank').innerText = curRank==='無'?'無階級':curRank+' 階';
-        document.getElementById('prob_r').innerText = (PROB_R_MAP[curLv]||15)+'%';
+        const rule = getRefineRule(curLv);
+        const currentProb = rule.forceSuccess ? 100 : (t.probs[curLv] || 15);
+        document.getElementById('prob_r').innerText = currentProb + '%';
+        document.getElementById('hintText').innerText = `使用：${rule.label} ${rule.bless > 0 ? '(鐵祝x'+rule.bless+')' : ''}`;
         
-        // 修正點 2: 更新畫面上的鋁提示與鐵祝消耗
-        const rRule = getRefineRule(curLv);
-        document.getElementById('hintText').innerText = `使用：${rRule.label} ${rRule.bless > 0 ? '(鐵祝x' + rRule.bless + ')' : ''}`;
-
-        document.getElementById('btn_rf').disabled = (curLv < 3);
-        const up = RANK_DEF[curRank];
-        const canUp = up && curLv >= up.minLv;
-        document.getElementById('btn_uf').disabled = document.getElementById('btn_us').disabled = !canUp;
-        document.getElementById('prob_u').innerText = canUp ? (curRank==='無'?(curLv===9?10:curLv===10?20:70):curRank==='D'?(curLv===10?20:60):curRank==='C'?50:40)+'%' : '--';
-
-        const cz = (stats.alu*val('p_alu'))+(stats.calu*val('p_calu'))+(stats.halu*val('p_halu'))+(stats.bless*val('p_bless'))+(stats.blue*val('p_blue'))+(stats.yellow*val('p_yellow'))+(stats.purple*val('p_purple'))+(stats.amber*val('p_amber'))+stats.fee;
-        document.getElementById('s_zeny').innerText = cz.toLocaleString();
-        document.getElementById('s_twd').innerText = Math.round(cz/val('p_rate')).toLocaleString();
+        const rd = RANK_DEF[curRank];
+        let upProb = (rd && rd.probs[curLv]) ? (rd.probs[curLv] + "%") : "--";
+        document.getElementById('prob_u').innerText = upProb;
+        document.getElementById('btn_uf').disabled = document.getElementById('btn_us').disabled = (upProb === "--");
+        document.getElementById('btn_rf').disabled = (currentProb === 100 || curLv >= 14);
+        document.getElementById('btn_rs').disabled = (curLv >= 14);
         
-        const luckEl = document.getElementById('luck_status');
-        if (cz === 0) { luckEl.innerText = simBenchmark>0?"點擊按鈕開始":"需模擬基準"; luckEl.className="luck-tag luck-norm"; }
-        else if (simBenchmark === 0) { luckEl.innerText = "請先按模擬基準"; }
-        else {
-            const ratio = cz / simBenchmark;
-            if (ratio < 0.5) { luckEl.innerText="天選之子(極歐)"; luckEl.className="luck-tag luck-god"; }
-            else if (ratio < 0.9) { luckEl.innerText="運氣不錯"; luckEl.className="luck-tag luck-good"; }
-            else if (ratio < 1.4) { luckEl.innerText="正常發揮"; luckEl.className="luck-tag luck-norm"; }
-            else { luckEl.innerText="非洲大酋長"; luckEl.className="luck-tag luck-hell"; }
-        }
-        ['alu','calu','halu','bless','blue','yellow','purple','amber','fail'].forEach(k => document.getElementById('s_'+k).innerText = stats[k]);
+        const cz = (stats.m1*prices.m1)+(stats.m2*prices.m2)+(stats.m3*prices.m3)+(stats.bless*val('p_bless'))
+            +(stats.blue*prices.blue)+(stats.yellow*prices.yellow)+(stats.purple*prices.purple)+(stats.amber*prices.amber)
+            +(stats.dim_box*prices.dim_box)+stats.fee;
+        const twd = Math.round(cz/val('p_rate'));
+        document.getElementById('s_zeny').innerText = cz.toLocaleString() + ' Zeny';
+        document.getElementById('s_twd').innerText = twd.toLocaleString();
+        
+        const targetTWD = 50000;
+        let deg = (twd / targetTWD) * 180 - 90;
+        if (deg > 90) deg = 90;
+        document.getElementById('needle').style.transform = `translateX(-50%) rotate(${deg}deg)`;
+
+        document.getElementById('stats_list').innerHTML = `
+            <div class="mat-item"><span>基礎材料</span><b>${stats.m1}</b></div>
+            <div class="mat-item"><span>濃縮材料</span><b>${stats.m2}</b></div>
+            <div class="mat-item"><span>高濃縮材料</span><b>${stats.m3}</b></div>
+            <div class="mat-item"><span>鐵匠的祝福</span><b>${stats.bless}</b></div>
+            <hr style="opacity:0.2;">
+            <div class="mat-item"><span>乙太天藍 (D)</span><b>${stats.blue}</b></div>
+            <div class="mat-item"><span>乙太黃 (C)</span><b>${stats.yellow}</b></div>
+            <div class="mat-item"><span>乙太紫 (B)</span><b>${stats.purple}</b></div>
+            <div class="mat-item"><span>乙太琥珀 (A)</span><b>${stats.amber}</b></div>
+            <hr style="opacity:0.2;">
+            <div class="mat-item"><span>失敗次數</span><b style="color:var(--fail)">${stats.fail}</b></div>`;
     }
 
     function runSimulation() {
-        const rawTargetRank = document.getElementById('sim_target_rank').value;
-        const targetRank = rawTargetRank === 'current' ? curRank : rawTargetRank;
-        const targetLv = parseInt(document.getElementById('sim_target_lv').value);
-        const rankOrder = ['無', 'D', 'C', 'B', 'A'];
-        if (rankOrder.indexOf(curRank) > rankOrder.indexOf(targetRank)) { alert("目標階級過低"); return; }
-        let totalZ = 0, totalF = 0;
-        for(let i=0; i<100; i++) {
-            let sL=curLv, sR=curRank, sS={alu:0,calu:0,halu:0,bless:0,blue:0,yellow:0,purple:0,amber:0,fee:0,fail:0};
-            while(sS.fail < 20000) {
-                let cIdx=rankOrder.indexOf(sR), tIdx=rankOrder.indexOf(targetRank);
-                if (cIdx===tIdx && sL>=targetLv) break;
-                if (cIdx < tIdx) {
-                    const u = RANK_DEF[sR];
-                    if (sL >= u.minLv) {
-                        const p = (sR==='無'?(sL===9?10:sL===10?20:70):sR==='D'?(sL===10?20:60):sR==='C'?50:40)/100;
-                        sS[u.g]+=u.qty; sS.fee+=u.f; if(Math.random()<p){sR=u.n;sL=0;} else sS.fail++;
-                    } else {
-                        const r=getRefineRule(sL); sS[r.id]++; sS.bless+=r.bless; sS.fee+=r.fee;
-                        if(Math.random()<(PROB_R_MAP[sL]||15)/100) sL++;
-                        else { sS.fail++; if(r.bless===0){ if(r.id==='alu') sL=Math.max(0,sL-3); else if(sL===6) sL=5; else if(sL>3) sL--; }}
+        const btn = document.getElementById('btn_sim'); btn.innerText = "⚡ 模擬計算中..."; btn.disabled = true;
+        setTimeout(() => {
+            const iterations = 5000, results = [], rankOrder = ['無', 'D', 'C', 'B', 'A'];
+            const tRank = document.getElementById('sim_target_rank').value === 'current' ? curRank : document.getElementById('sim_target_rank').value;
+            const tLv = parseInt(document.getElementById('sim_target_lv').value);
+            const strat = document.getElementById('sim_strat').value;
+            const templateObj = EQUIP_TEMPLATES[currentTemplate];
+
+            for(let i=0; i<iterations; i++) {
+                let sL = curLv, sR = curRank, sS = {m1:0,m2:0,m3:0,bless:0,blue:0,yellow:0,purple:0,amber:0,fee:0,dim_box:0,fail:0};
+                while(true) {
+                    if (sR === tRank && sL >= tLv) break;
+                    const rd = RANK_DEF[sR];
+                    
+                    let tryUpgrade = false;
+                    if (rd && rankOrder.indexOf(sR) < rankOrder.indexOf(tRank)) {
+                        if (strat === '11' && sL >= 11) tryUpgrade = true; // 策略：穩上+11才升
+                        if (strat === 'min' && rd.probs[sL]) tryUpgrade = true; // 策略：達門檻立刻升
                     }
-                } else {
-                    const r=getRefineRule(sL); sS[r.id]++; sS.bless+=r.bless; sS.fee+=r.fee;
-                    if(Math.random()<(PROB_R_MAP[sL]||15)/100) sL++;
-                    else { sS.fail++; if(r.bless===0){ if(r.id==='alu') sL=Math.max(0,sL-3); else if(sL===6) sL=5; else if(sL>3) sL--; }}
+
+                    if (tryUpgrade) {
+                        sS[rd.g] += rd.qty; sS.fee += rd.f;
+                        if (Math.random() < rd.probs[sL]/100) { sR = rd.n; sL = 0; } else { sS.fail++; }
+                        continue;
+                    }
+
+                    const rule = getRefineRule(sL); sS[rule.id]++; sS.bless += rule.bless; sS.fee += rule.fee;
+                    if (Math.random() < (rule.forceSuccess ? 1 : (templateObj.probs[sL]||15)/100)) sL++; 
+                    else { 
+                        sS.fail++; 
+                        // 核心修復：使用校正後的失敗降階邏輯
+                        if (rule.bless === 0) sL = simHandleRefineFail(sL, rule.id, templateObj.safe); 
+                    }
                 }
+                results.push((sS.m1*prices.m1)+(sS.m2*prices.m2)+(sS.m3*prices.m3)+(sS.bless*val('p_bless'))+(sS.blue*prices.blue)+(sS.yellow*prices.yellow)+(sS.purple*prices.purple)+(sS.amber*prices.amber)+(sS.dim_box*prices.dim_box)+sS.fee);
             }
-            totalZ += (sS.alu*val('p_alu'))+(sS.calu*val('p_calu'))+(sS.halu*val('p_halu'))+(sS.bless*val('p_bless'))+(sS.blue*val('p_blue'))+(sS.yellow*val('p_yellow'))+(sS.purple*val('p_purple'))+(sS.amber*val('p_amber'))+sS.fee;
-            totalF += sS.fail;
-        }
-        simBenchmark = totalZ / 100;
-        document.getElementById('sim_zeny_val').innerText = Math.round(simBenchmark).toLocaleString();
-        document.getElementById('sim_twd_val').innerText = Math.round(simBenchmark/val('p_rate')).toLocaleString();
-        document.getElementById('sim_fail_val').innerText = Math.round(totalF/100);
-        updateUI();
+            results.sort((a,b) => a-b);
+            const avg = results.reduce((a,b)=>a+b)/5000;
+            document.getElementById('sim_result_area').style.display = 'block';
+            document.getElementById('sim_zeny_val').innerText = Math.round(avg).toLocaleString();
+            document.getElementById('sim_twd_val').innerText = Math.round(avg/val('p_rate')).toLocaleString();
+            document.getElementById('sim_p10').innerText = Math.round(results[500]/val('p_rate')).toLocaleString();
+            document.getElementById('sim_p90').innerText = Math.round(results[4500]/val('p_rate')).toLocaleString();
+            btn.innerText = "✅ 模擬完畢"; btn.disabled = false;
+        }, 50);
     }
 
     function archive() {
-        const row = `<tr><td>${new Date().toLocaleTimeString()}</td><td>${document.getElementById('itemName').value || "防具"}</td><td>${curRank}+${curLv}</td><td>${document.getElementById('s_twd').innerText}</td><td><button onclick="this.parentElement.parentElement.remove()">🗑️</button></td></tr>`;
-        document.getElementById('archBody').innerHTML = row + document.getElementById('archBody').innerHTML;
-        reset(true);
+        const cz = parseInt(document.getElementById('s_zeny').innerText.replace(/,/g, ''));
+        const data = { time: new Date().toLocaleTimeString(), name: document.getElementById('itemName').value || '未命名', status: `+${curLv} ${curRank}階`, twd: Math.round(cz/val('p_rate')).toLocaleString(), zeny: cz.toLocaleString() };
+        let archs = JSON.parse(localStorage.getItem('ro_v81_archs') || '[]');
+        archs.unshift(data); localStorage.setItem('ro_v81_archs', JSON.stringify(archs)); renderArchives();
+        reset();
     }
+
+    function renderArchives() {
+        const body = document.getElementById('archBody');
+        const archs = JSON.parse(localStorage.getItem('ro_v81_archs') || '[]');
+        body.innerHTML = archs.map((a, i) => `<tr><td>${a.time}</td><td>${a.name}</td><td>${a.status}</td><td style="color:red; font-weight:bold;">${a.twd}</td><td>${a.zeny}</td><td><button onclick="delArch(${i})">刪除</button></td></tr>`).join('');
+    }
+
+    function delArch(i) { let archs = JSON.parse(localStorage.getItem('ro_v81_archs') || '[]'); archs.splice(i, 1); localStorage.setItem('ro_v81_archs', JSON.stringify(archs)); renderArchives(); }
+    function clearArchives() { if(confirm("清空？")) { localStorage.removeItem('ro_v81_archs'); renderArchives(); } }
     function val(id) { return parseInt(document.getElementById(id).value) || 0; }
-    function reset(isSilent=false) { if(isSilent || confirm("確定重置？")) { curLv=0; curRank='無'; stats={alu:0,calu:0,halu:0,bless:0,blue:0,yellow:0,purple:0,amber:0,fail:0,fee:0}; updateUI(); } }
-    function save() { const cfg = { name: document.getElementById('itemName').value, alu: val('p_alu'), calu: val('p_calu'), halu: val('p_halu'), bless: val('p_bless'), blue: val('p_blue'), yellow: val('p_yellow'), purple: val('p_purple'), amber: val('p_amber'), rate: val('p_rate'), start: document.getElementById('b_start').value, b_dust: val('base_dust'), b_magic: val('base_magic'), b_alu: val('base_alu'), b_calu: val('base_calu'), b_halu: val('base_halu') }; localStorage.setItem('ro_v65_cfg', JSON.stringify(cfg)); }
+    function reset() { curLv=0; curRank='無'; stats={m1:0,m2:0,m3:0,bless:0,blue:0,yellow:0,purple:0,amber:0,fail:0,fee:0,dim_box:0}; updateUI(); }
+    function save() { const cfg = {}; document.querySelectorAll('input, select').forEach(el => { if(el.id) cfg[el.id] = el.value; }); localStorage.setItem('ro_v81_cfg', JSON.stringify(cfg)); }
+    function switchTemplate(v) { currentTemplate = v; document.getElementById('dim_materials').style.display = (v === 'dimension_weapon') ? 'block' : 'none'; syncPrices(); }
+
     window.onload = () => {
-        const s = JSON.parse(localStorage.getItem('ro_v65_cfg'));
-        if(s) { 
-            document.getElementById('itemName').value = s.name || ""; 
-            ['p_alu','p_calu','p_halu','p_bless','p_blue','p_yellow','p_purple','p_amber','p_rate','base_dust','base_magic','base_alu','base_calu','base_halu'].forEach(id => {
-                if(s[id] || s[id]===0) document.getElementById(id).value = s[id];
-            });
-            document.getElementById('b_start').value = s.start;
-        }
-        updateUI();
+        const s = JSON.parse(localStorage.getItem('ro_v81_cfg'));
+        if(s) Object.keys(s).forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = s[id]; });
+        switchTemplate(document.getElementById('equip_template').value);
+        renderArchives();
     };
 </script>
 </body>
